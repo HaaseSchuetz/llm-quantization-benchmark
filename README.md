@@ -98,7 +98,8 @@ Generate report
 python scripts/compare.py --format markdown --filename mistral_quantization
 ```
 
-## Example results
+## Results
+### Example results
 | Model | Quantization | Bits | Model Size (MB) | GPU Memory Used (MB) | Avg Latency (ms) | Tokens/sec |
 | --- | --- | --- | --- | --- | --- | --- |
 | mistral-7b | FP16 (Baseline) | 16 | 28200.0 | 56400 | 120.5 | 245.3 |
@@ -117,7 +118,7 @@ python scripts/compare.py --format markdown --filename mistral_quantization
 
 > Results show ~2–5% accuracy drop with 4-bit quantization, but ~2x speedup and 4x memory savings.
 
-## Methods
+### Methods
 | Method | Pros | Cons | Best For |
 | --- | --- | --- | --- |
 | FP16 | No accuracy loss, simple | High memory usage | Development, high-end GPUs |
@@ -127,7 +128,7 @@ python scripts/compare.py --format markdown --filename mistral_quantization
 | AWQ | Better accuracy than GPTQ | Slower than GPTQ | High-accuracy 4-bit |
 | Optimum | ONNX-based, hardware-optimized | Limited to 8-bit | CPU deployment |
 
-## Metrics
+### Metrics
 | Metric | Description | Importance |
 | --- | --- | --- |
 | Accuracy | % correct answers on benchmarks | Primary metric for capability |
@@ -135,3 +136,69 @@ python scripts/compare.py --format markdown --filename mistral_quantization
 | Memory | GPU/CPU memory usage | Deployment feasibility |
 | Latency | Time per inference request | User experience |
 | Throughput | Tokens/sec | Batch processing efficiency |
+
+## Extension guide
+### Add new quantization method
+1. Add the method to `config/quantization.json`:
+```json
+{
+  "my_method": {
+    "name": "My Method",
+    "method": "my_method",
+    "library": "my_library",
+    "bits": 4,
+    "description": "Description here",
+    "config": {"key": "value"}
+  }
+}
+```
+
+2. Add a new quantizer class in `quantization/methods.py`:
+```python
+class MyQuantizer(QuantizationMethod):
+    def quantize(self, model_name, **kwargs):
+        # Your implementation
+        pass
+```
+
+3. Update `get_quantizer` factory method
+
+### Add new benchmark
+Edit `config/benchmarks.json`
+```json
+{
+  "my_benchmark": {
+    "name": "My Benchmark",
+    "task": "my_task",
+    "metrics": ["accuracy"],
+    "split": "test",
+    "num_fewshot": 5
+  }
+}
+```
+
+## Citing this work 
+```bibtex
+@misc{llm-quantization-benchmark,
+  author = {Haase-Schütz, Christian},
+  title = {LLM Quantization Benchmark},
+  year = {2026},
+  url = {https://github.com/HaaseSchuetz/llm-quantization-benchmark},
+  note = {A comprehensive benchmarking suite for LLM quantization methods}
+}
+```
+## Acknowledgements
+* [Hugging Face](https://huggingface.co/) for transformers, bitsandbytes, and optimum.
+* [EleutherAI](https://github.com/EleutherAI) for lm-evaluation-harness.
+* [AutoGPTQ](https://github.com/PanQiWei/AutoGPTQ) for GPTQ implementation.
+* [AutoAWQ](https://github.com/casper-hansen/AutoAWQ) for AWQ implementation.
+* [Mistral AI](https://mistral.ai/) for open-source LLMs.
+
+
+
+
+
+
+
+
+
