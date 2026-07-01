@@ -47,7 +47,7 @@ def benchmark_quantization(
 
     # Benchmark each quantization method
     for q_method in quantization_methods:
-        print(f"\n🔧 Benchmarking **{model_name}** with **{q_method}**...")
+        print(f"\n Benchmarking **{model_name}** with **{q_method}**...")
 
         # Get quantizer
         q_config = quantization_configs[q_method]
@@ -57,7 +57,7 @@ def benchmark_quantization(
         model, tokenizer = quantizer.quantize(model_name)
 
         # Benchmark efficiency metrics
-        print("  📊 Running efficiency benchmarks...")
+        print("  Running efficiency benchmarks...")
         efficiency_results = {
             "memory": MemoryBenchmark.benchmark_memory(model, tokenizer, prompts[0]),
             "latency": LatencyBenchmark.benchmark_latency(model, tokenizer, prompts[:2]),
@@ -66,7 +66,7 @@ def benchmark_quantization(
         }
 
         # Benchmark accuracy
-        print("  🎯 Running accuracy benchmarks...")
+        print("  Running accuracy benchmarks...")
         accuracy_results = []
         for benchmark in benchmarks:
             try:
@@ -104,7 +104,7 @@ def benchmark_quantization(
     with open(results_path, "w") as f:
         json.dump(all_results, f, indent=2)
 
-    print(f"\n✅ All benchmarks complete! Results saved to: {results_path}")
+    print(f"\n All benchmarks complete! Results saved to: {results_path}")
     return all_results
 
 def main():
