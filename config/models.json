@@ -1,0 +1,17 @@
+{
+  "mistral-7b": {
+    "name": "mistralai/Mistral-7B-v0.1",
+    "dtype": "float16",
+    "device_map": "auto"
+  },
+  "llama-2-7b": {
+    "name": "meta-llama/Llama-2-7b-hf",
+    "dtype": "float16",
+    "device_map": "auto"
+  },
+  "phi-2": {
+    "name": "microsoft/phi-2",
+    "dtype": "float16",
+    "device_map": "auto"
+  }
+}
