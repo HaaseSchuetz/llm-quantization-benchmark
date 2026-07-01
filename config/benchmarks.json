@@ -1,0 +1,22 @@
+{
+  "mmlu": {
+    "name": "MMLU",
+    "task": "mmlu",
+    "metrics": ["accuracy"],
+    "split": "test",
+    "num_fewshot": 5
+  },
+  "truthfulqa": {
+    "name": "TruthfulQA",
+    "task": "truthfulqa",
+    "metrics": ["accuracy"],
+    "split": "validation",
+    "num_fewshot": 0
+  },
+  "perplexity": {
+    "name": "Perplexity",
+    "task": "wikitext",
+    "metrics": ["perplexity"],
+    "split": "test"
+  }
+}
