@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment
+.env
+venv/
+.env/
+.venv/
+.env.bak/
+venv.bak/
+
+# Quantized models (large files)
+quantized_models/
+results/raw/*
+!results/raw/.gitkeep
+results/reports/*
+!results/reports/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.out
+
+# Notebooks
+.ipynb_checkpoints/
+
+# API Keys
+*.json
+!config/*.json
