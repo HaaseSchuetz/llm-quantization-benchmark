@@ -1,0 +1,59 @@
+{
+  "fp16": {
+    "name": "FP16 (Baseline)",
+    "method": "fp16",
+    "library": "transformers",
+    "bits": 16,
+    "description": "Full-precision (16-bit) baseline"
+  },
+  "int8": {
+    "name": "INT8",
+    "method": "int8",
+    "library": "bitsandbytes",
+    "bits": 8,
+    "description": "8-bit quantization with bitsandbytes"
+  },
+  "int4": {
+    "name": "INT4",
+    "method": "int4",
+    "library": "bitsandbytes",
+    "bits": 4,
+    "description": "4-bit quantization with bitsandbytes (NF4)",
+    "config": {
+      "load_in_4bit": true,
+      "bnb_4bit_use_double_quant": true,
+      "bnb_4bit_quant_type": "nf4",
+      "bnb_4bit_compute_dtype": "float16"
+    }
+  },
+  "gptq": {
+    "name": "GPTQ (4-bit)",
+    "method": "gptq",
+    "library": "auto-gptq",
+    "bits": 4,
+    "description": "4-bit quantization with GPTQ",
+    "config": {
+      "bits": 4,
+      "group_size": 128,
+      "desc_act": false
+    }
+  },
+  "awq": {
+    "name": "AWQ (4-bit)",
+    "method": "awq",
+    "library": "auto-awq",
+    "bits": 4,
+    "description": "4-bit quantization with AWQ",
+    "config": {
+      "bits": 4,
+      "group_size": 128
+    }
+  },
+  "optimum-int8": {
+    "name": "Optimum INT8",
+    "method": "optimum-int8",
+    "library": "optimum",
+    "bits": 8,
+    "description": "8-bit quantization with Hugging Face Optimum"
+  }
+}
