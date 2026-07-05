@@ -1,7 +1,7 @@
 import argparse
 import json
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -16,13 +16,18 @@ def load_results(results_dir: str = "results/raw") -> List[Dict]:
         results.extend(data)
     return results
 
-def generate_comparison_report(
-    results: List[Dict],
-    output_format: str = "markdown",
-    filename: str = "quantization_comparison"
-) -> str:
-    """Generate a comparison report from benchmark results."""
-    # Flatten efficiency metrics
+def extract_data_from_results(results: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
+    """Extract efficiency and accuracy data from benchmark results.
+    
+    This helper function eliminates duplicate data extraction logic used by
+    both generate_comparison_report() and plot_results().
+    
+    Args:
+        results: List of benchmark result dictionaries
+        
+    Returns:
+        Tuple of (efficiency_data, accuracy_data) lists
+    """
     efficiency_data = []
     accuracy_data = []
 
@@ -39,7 +44,7 @@ def generate_comparison_report(
             "Quantization": q_name,
             "Bits": q_bits,
             "Model Size (MB)": efficiency["memory"]["model_size_mb"],
-            "GPU Memory Used (MB)": efficiency["memory"]["gpu_used_mb"],
+            "GPU Memory (MB)": efficiency["memory"]["gpu_used_mb"],
             "Avg Latency (ms)": efficiency["latency"]["avg_latency_ms"],
             "Tokens/sec": efficiency["token_speed"]
         })
@@ -56,6 +61,16 @@ def generate_comparison_report(
                     "Metric": metric,
                     "Value": value
                 })
+
+    return efficiency_data, accuracy_data
+
+def generate_comparison_report(
+    results: List[Dict],
+    output_format: str = "markdown",
+    filename: str = "quantization_comparison"
+) -> str:
+    """Generate a comparison report from benchmark results."""
+    efficiency_data, accuracy_data = extract_data_from_results(results)
 
     # Generate reports
     if output_format == "markdown":
@@ -133,42 +148,14 @@ def save_report(report: str, filename: str, output_format: str, save_dir: str = 
 
 def plot_results(results: List[Dict], save_dir: str = "results/reports"):
     """Generate plots from benchmark results."""
-    # Prepare data
-    efficiency_data = []
-    accuracy_data = []
+    # Extract data using the helper function
+    efficiency_data, accuracy_data = extract_data_from_results(results)
 
-    for result in results:
-        model = result["model"]
-        quantization = result["quantization"]
-        q_bits = result["config"]["bits"]
-        q_name = result["config"]["name"]
+    # Create save directory if it doesn't exist
+    save_path = Path(save_dir)
+    save_path.mkdir(parents=True, exist_ok=True)
 
-        # Efficiency
-        efficiency = result["efficiency"]
-        efficiency_data.append({
-            "Model": model,
-            "Quantization": q_name,
-            "Bits": q_bits,
-            "Model Size (MB)": efficiency["memory"]["model_size_mb"],
-            "GPU Memory (MB)": efficiency["memory"]["gpu_used_mb"],
-            "Latency (ms)": efficiency["latency"]["avg_latency_ms"],
-            "Tokens/sec": efficiency["token_speed"]
-        })
-
-        # Accuracy
-        for acc_result in result["accuracy"]:
-            benchmark = acc_result["benchmark"]
-            for metric, value in acc_result["metrics"].items():
-                accuracy_data.append({
-                    "Model": model,
-                    "Quantization": q_name,
-                    "Bits": q_bits,
-                    "Benchmark": benchmark,
-                    "Value": value
-                })
-
-    # Plot 1: Model Size vs. Accuracy
-    plt.figure(figsize=(12, 6))
+    # Prepare DataFrames
     eff_df = pd.DataFrame(efficiency_data)
     acc_df = pd.DataFrame(accuracy_data)
 
@@ -179,6 +166,8 @@ def plot_results(results: List[Dict], save_dir: str = "results/reports"):
         on=["Model", "Quantization", "Bits"]
     )
 
+    # Plot 1: Model Size vs. Accuracy
+    plt.figure(figsize=(12, 6))
     sns.scatterplot(
         data=merged_df,
         x="Model Size (MB)",
@@ -193,14 +182,14 @@ def plot_results(results: List[Dict], save_dir: str = "results/reports"):
     plt.ylabel("Accuracy")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(save_dir + "/size_vs_accuracy.png", dpi=300, bbox_inches="tight")
+    plt.savefig(save_path / "size_vs_accuracy.png", dpi=300, bbox_inches="tight")
     plt.close()
 
     # Plot 2: Latency vs. Accuracy
     plt.figure(figsize=(12, 6))
     sns.scatterplot(
         data=merged_df,
-        x="Latency (ms)",
+        x="Avg Latency (ms)",
         y="Value",
         hue="Bits",
         style="Quantization",
@@ -212,7 +201,7 @@ def plot_results(results: List[Dict], save_dir: str = "results/reports"):
     plt.ylabel("Accuracy")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(save_dir + "/latency_vs_accuracy.png", dpi=300, bbox_inches="tight")
+    plt.savefig(save_path / "latency_vs_accuracy.png", dpi=300, bbox_inches="tight")
     plt.close()
 
     # Plot 3: Throughput vs. Accuracy
@@ -231,10 +220,10 @@ def plot_results(results: List[Dict], save_dir: str = "results/reports"):
     plt.ylabel("Accuracy")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(save_dir + "/throughput_vs_accuracy.png", dpi=300, bbox_inches="tight")
+    plt.savefig(save_path / "throughput_vs_accuracy.png", dpi=300, bbox_inches="tight")
     plt.close()
 
-    print(f" Plots saved to: {save_dir}")
+    print(f"📊 Plots saved to: {save_path}")
 
 def main():
     parser = argparse.ArgumentParser(description="Compare quantization methods.")
@@ -255,7 +244,7 @@ def main():
     if args.plot:
         plot_results(results)
 
-    print("\n Comparison Report:")
+    print("\n📋 Comparison Report:")
     if args.format == "markdown":
         print(report)
 
