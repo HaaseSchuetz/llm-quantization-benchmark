@@ -1,9 +1,13 @@
 import json
+import logging
 from typing import Dict, List, Optional, Union
 from dataclasses import dataclass
 import pandas as pd
 from lm_evaluation_harness import evaluate as lm_evaluate
 from transformers import PreTrainedModel, PreTrainedTokenizer
+from config.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 @dataclass
 class EvaluationResult:
@@ -23,6 +27,7 @@ class LLEvaluator:
     ):
         self.benchmarks_config = self._load_json(benchmarks_config)
         self.results_dir = results_dir
+        logger.debug(f"Initialized LLEvaluator with results_dir={results_dir}")
 
     @staticmethod
     def _load_json(path: str) -> Dict:
@@ -40,6 +45,7 @@ class LLEvaluator:
         save_raw: bool = True
     ) -> EvaluationResult:
         """Evaluate a quantized model on a benchmark."""
+        logger.info(f"Evaluating {model_name} with {quantization} on {benchmark_name}")
         benchmark_config = self.benchmarks_config[benchmark_name]
 
         # Prepare evaluation args
@@ -79,7 +85,9 @@ class LLEvaluator:
             raw_path = raw_dir / f"{model_name.replace('/', '_')}_{quantization}_{benchmark_name}.json"
             with open(raw_path, "w") as f:
                 json.dump(results, f, indent=2)
+            logger.debug(f"Saved raw results to {raw_path}")
 
+        logger.info(f"Evaluation complete. Metrics: {metrics}")
         return EvaluationResult(
             model=model_name,
             quantization=quantization,
@@ -94,6 +102,7 @@ class LLEvaluator:
         output_format: str = "markdown"
     ) -> str:
         """Generate a report from evaluation results."""
+        logger.info(f"Generating {output_format} report from {len(results)} results")
         data = []
         for result in results:
             for metric, value in result.metrics.items():
