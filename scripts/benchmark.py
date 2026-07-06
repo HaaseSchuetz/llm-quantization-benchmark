@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Dict, List
@@ -8,7 +9,10 @@ from quantization.metrics.memory import MemoryBenchmark
 from quantization.metrics.latency import LatencyBenchmark
 from quantization.metrics.throughput import ThroughputBenchmark
 from evaluation.evaluator import LLEvaluator
+from config.logging_config import setup_logging
 import torch
+
+logger = logging.getLogger(__name__)
 
 def benchmark_quantization(
     model_name: str,
@@ -47,7 +51,7 @@ def benchmark_quantization(
 
     # Benchmark each quantization method
     for q_method in quantization_methods:
-        print(f"\n Benchmarking **{model_name}** with **{q_method}**...")
+        logger.info(f"Benchmarking {model_name} with {q_method}...")
 
         # Get quantizer
         q_config = quantization_configs[q_method]
@@ -57,7 +61,7 @@ def benchmark_quantization(
         model, tokenizer = quantizer.quantize(model_name)
 
         # Benchmark efficiency metrics
-        print("  Running efficiency benchmarks...")
+        logger.info("Running efficiency benchmarks...")
         efficiency_results = {
             "memory": MemoryBenchmark.benchmark_memory(model, tokenizer, prompts[0]),
             "latency": LatencyBenchmark.benchmark_latency(model, tokenizer, prompts[:2]),
@@ -66,7 +70,7 @@ def benchmark_quantization(
         }
 
         # Benchmark accuracy
-        print("  Running accuracy benchmarks...")
+        logger.info("Running accuracy benchmarks...")
         accuracy_results = []
         for benchmark in benchmarks:
             try:
@@ -80,9 +84,9 @@ def benchmark_quantization(
                     save_raw=True
                 )
                 accuracy_results.append(eval_result)
-                print(f"    ✅ {benchmark}: {eval_result.metrics}")
+                logger.info(f"✅ {benchmark}: {eval_result.metrics}")
             except Exception as e:
-                print(f"    ❌ {benchmark}: {str(e)}")
+                logger.error(f"❌ {benchmark}: {str(e)}")
 
         # Clean up
         del model
@@ -104,7 +108,7 @@ def benchmark_quantization(
     with open(results_path, "w") as f:
         json.dump(all_results, f, indent=2)
 
-    print(f"\n All benchmarks complete! Results saved to: {results_path}")
+    logger.info(f"All benchmarks complete! Results saved to: {results_path}")
     return all_results
 
 def main():
@@ -114,7 +118,12 @@ def main():
     parser.add_argument("--benchmarks", nargs="+", default=["mmlu", "truthfulqa"], help="Benchmarks to evaluate")
     parser.add_argument("--limit", type=int, default=None, help="Limit examples per benchmark")
     parser.add_argument("--save-dir", type=str, default="results", help="Directory to save results")
+    parser.add_argument("--log-level", type=str, default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], help="Logging level")
+    parser.add_argument("--log-file", type=str, default=None, help="Log file path (optional)")
     args = parser.parse_args()
+
+    # Setup logging
+    setup_logging(level=args.log_level, log_file=args.log_file)
 
     benchmark_quantization(
         model_name=args.model,

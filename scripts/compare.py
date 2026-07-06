@@ -1,10 +1,14 @@
 import argparse
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from config.logging_config import setup_logging
+
+logger = logging.getLogger(__name__)
 
 def load_results(results_dir: str = "results/raw") -> List[Dict]:
     """Load all benchmark results from the results directory."""
@@ -128,7 +132,7 @@ def save_report(report: str, filename: str, output_format: str, save_dir: str = 
             with open(filepath, "w") as f:
                 f.write(report)
 
-    print(f"💾 Report saved to: {save_path}")
+    logger.info(f"Report saved to: {save_path}")
     return filepath
 
 def plot_results(results: List[Dict], save_dir: str = "results/reports"):
@@ -234,7 +238,7 @@ def plot_results(results: List[Dict], save_dir: str = "results/reports"):
     plt.savefig(save_dir + "/throughput_vs_accuracy.png", dpi=300, bbox_inches="tight")
     plt.close()
 
-    print(f" Plots saved to: {save_dir}")
+    logger.info(f"Plots saved to: {save_dir}")
 
 def main():
     parser = argparse.ArgumentParser(description="Compare quantization methods.")
@@ -242,7 +246,12 @@ def main():
     parser.add_argument("--format", type=str, default="markdown", choices=["markdown", "csv", "json"])
     parser.add_argument("--filename", type=str, default="quantization_comparison")
     parser.add_argument("--plot", action="store_true", help="Generate plots")
+    parser.add_argument("--log-level", type=str, default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], help="Logging level")
+    parser.add_argument("--log-file", type=str, default=None, help="Log file path (optional)")
     args = parser.parse_args()
+
+    # Setup logging
+    setup_logging(level=args.log_level, log_file=args.log_file)
 
     # Load results
     results = load_results(args.results_dir)
@@ -255,7 +264,7 @@ def main():
     if args.plot:
         plot_results(results)
 
-    print("\n Comparison Report:")
+    logger.info("Comparison Report:")
     if args.format == "markdown":
         print(report)
 
